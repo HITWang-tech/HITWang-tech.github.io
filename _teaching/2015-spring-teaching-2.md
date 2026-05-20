@@ -2,7 +2,7 @@
 title: "神经网络与深度学习2026学习报告"
 collection: teaching
 type: ""
-permalink: /teaching/2015-spring-teaching-1
+permalink: /teaching/2015-spring-teaching-2
 date: ""
 ---
 
