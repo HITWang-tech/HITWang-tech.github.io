@@ -23,8 +23,8 @@ repository               : ""
 author:
   # Biographic information
   avatar           : "profile.png"
-  name             : "Your Sidebar Name"
-  pronouns         : "he/him"  
+  name             : "王烁彭"
+  pronouns         :  
   bio              : "哈工大控制科学与工程硕士，深耕自动驾驶、大模型、底盘控制与深度强化学习"
   location         : "黑龙江哈尔滨"
   employer         : "哈尔滨工业大学"
