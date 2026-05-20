@@ -7,10 +7,10 @@ redirect_from:
   - /about.html
 ---
 ## 神经网络与深度学习2026春
-- [第1周](神经网络与深度学习2026学习报告Week1.md)
+- [第1周](https://hitwang-tech.github.io/teaching/2014-spring-teaching-2)
 
 ---
 
 ## 深度强化学习与控制2026春
 
-- [第1周](深度强化学习与控制2026学习报告Week1.md)
+- [第1周](https://hitwang-tech.github.io/teaching/2014-spring-teaching-1)
