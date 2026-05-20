@@ -1,8 +1,9 @@
 ---
 title: "深度强化学习与控制2026学习报告"
 collection: teaching
-type: "Undergraduate course"
+type: "研究生课程"
 permalink: /teaching/2014-spring-teaching-1
+date: 
 ---
 
 
