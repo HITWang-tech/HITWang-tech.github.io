@@ -240,7 +240,9 @@ $$h(x)=\frac{1}{1+e^{-z}},z=\theta_1 x_1+\theta_2 x_2+\theta_0$$
 
 $$P(y=1|x,\theta)=h(x),\quad P(y=0|x,\theta)=1-h(x)$$
 
-统一概率公式： $$P(y\|x,\theta)=(h_\theta(x))^y(1-h_\theta(x))^{1-y}$$ 
+统一概率公式： 
+
+$$P(y|x,\theta)=(h_\theta(x))^y(1-h_\theta(x))^{1-y}$$ 
 
 假设样本独立同分布，构造似然函数最大化概率，等价于最小化负似然损失。
 
