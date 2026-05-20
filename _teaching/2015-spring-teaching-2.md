@@ -1,8 +1,9 @@
 ---
 title: "神经网络与深度学习2026学习报告"
 collection: teaching
-type: "Workshop"
+type: "研究生课程"
 permalink: /teaching/2015-spring-teaching-1
+date:
 ---
 
 
