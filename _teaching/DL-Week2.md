@@ -1,9 +1,7 @@
 ---
 title: "神经网络与深度学习2026学习报告"
 collection: teaching
-type: "Workshop"
 permalink: /teaching/DL-Week2
-date: 2026-05-22
 ---
 
 ## 1 卷积神经网络
