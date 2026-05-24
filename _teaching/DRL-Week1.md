@@ -1,5 +1,5 @@
 ---
-title: "深度强化学习与控制2026学习报告"
+title: "第1周：强化学习基础"
 collection: teaching
 permalink: /teaching/DRL-Week1
 ---
