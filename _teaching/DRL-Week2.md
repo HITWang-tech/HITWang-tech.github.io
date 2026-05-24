@@ -1,4 +1,11 @@
-# 第一部分：基于策略的深度强化学习算法
+**---
+title: "深度强化学习与控制2026学习报告"
+collection: teaching
+type: "Workshop"
+permalink: /teaching/DRL-Week1
+date: 2025-05-15
+---
+**# 第一部分：基于策略的深度强化学习算法
 
 ## 1 策略梯度算法（Policy Gradient）
 
