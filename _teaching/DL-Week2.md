@@ -133,11 +133,14 @@ conv2d = nn.Conv2d(1,1,kernel_size=3,padding=1)
 
 #### 步幅（stride）
 卷积窗口滑动的元素数量，可缩减输出空间维度。
+
 输出形状：
+
 $$
 \lfloor (n_h -k_h +p_h +s_h)/s_h \rfloor × \lfloor (n_w -k_w +p_w +s_w)/s_w \rfloor
 $$
-当输入尺寸能被步幅整除且填充为 $$k_h-1$$、 $$k_w-1$$时，输出尺寸为$$(n_h/s_h)×(n_w/s_w)$$
+
+当输入尺寸能被步幅整除且填充为 $$k_h-1$$、 $$k_w-1$$时，输出尺寸为 $$(n_h/s_h)×(n_w/s_w)$$
 ```python
 conv2d = nn.Conv2d(1,1,kernel_size=3,padding=1,stride=2)
 ```
@@ -153,7 +156,9 @@ def corr2d_multi_in(X, K):
 ```
 
 #### 多输出通道
-为每个输出通道创建$$c_i×k_h×k_w$$的卷积核，卷积核形状为$$c_o×c_i×k_h×k_w$$各输出通道独立计算所有输入通道的互相关并叠加。
+为每个输出通道创建$$c_i×k_h×k_w$$的卷积核，卷积核形状为$$c_o×c_i×k_h×k_w$$
+
+各输出通道独立计算所有输入通道的互相关并叠加。
 ```python
 def corr2d_multi_in_out(X, K):
     return torch.stack([corr2d_multi_in(X,k) for k in K], 0)
