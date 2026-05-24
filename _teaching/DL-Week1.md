@@ -1,9 +1,7 @@
 ---
 title: "神经网络与深度学习2026学习报告"
 collection: teaching
-type: "Workshop"
 permalink: /teaching/DL-Week1
-date: 2026-05-15
 ---
 
 # 第一章 人工智能、机器学习与深度学习基础概念
