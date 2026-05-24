@@ -1,5 +1,5 @@
 ---
-title: "神经网络与深度学习2026学习报告"
+title: "第1周：机器学习与深度学习基础"
 collection: teaching
 permalink: /teaching/DL-Week1
 ---
