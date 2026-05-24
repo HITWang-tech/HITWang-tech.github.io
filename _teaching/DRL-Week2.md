@@ -1,9 +1,7 @@
 ---
 title: "第2周：基于策略和模型的深度强化学习与其在控制中的应用"
 collection: teaching
-type: "Workshop"
 permalink: /teaching/DRL-Week2
-date: 2025-05-15
 ---
 # 第一部分：基于策略的深度强化学习算法
 
