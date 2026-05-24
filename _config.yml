@@ -222,16 +222,16 @@ kramdown:
 collections:
   teaching:
     output: true
-    permalink: /学习课程/:path/
+    permalink: /:collection/:path/
   publications:
     output: true
-    permalink: /科研成果/:path/
+    permalink: /:collection/:path/
   portfolio:
     output: true
-    permalink: /项目实践/:path/
+    permalink: /:collection/:path/
   talks:
     output: true
-    permalink: /学术分享/:path/
+    permalink: /:collection/:path/
 
 
 # These settings control how pages and collections are included in the site
