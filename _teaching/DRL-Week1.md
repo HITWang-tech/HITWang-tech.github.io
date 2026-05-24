@@ -1,9 +1,7 @@
 ---
 title: "深度强化学习与控制2026学习报告"
 collection: teaching
-type: "Workshop"
 permalink: /teaching/DRL-Week1
-date: 2025-05-15
 ---
 
 
