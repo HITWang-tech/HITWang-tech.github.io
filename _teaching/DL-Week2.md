@@ -1,5 +1,5 @@
 ---
-title: "神经网络与深度学习2026学习报告"
+title: "第2周：经典卷积神经网络与现代卷积神经网络及其应用"
 collection: teaching
 permalink: /teaching/DL-Week2
 ---
