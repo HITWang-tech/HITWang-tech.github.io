@@ -9,7 +9,7 @@ redirect_from:
 ## 神经网络与深度学习2026春
 - [第1周](https://hitwang-tech.github.io/teaching/DL-Week1)
 - [第2周](https://hitwang-tech.github.io/teaching/DL-Week2)
-
+- [第3周](https://hitwang-tech.github.io/teaching/DL-Week3)
 ---
 
 ## 深度强化学习与控制2026春
