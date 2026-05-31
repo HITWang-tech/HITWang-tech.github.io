@@ -4,6 +4,133 @@ collection: teaching
 permalink: /teaching/DL-Week3
 ---
 
+<img src="https://raw.githubusercontent.com/HITWang-tech/HITWang-tech.github.io/refs/heads/master/images/exported_image.png">
+
+## 1. 诞生与核心思想
+- 2017 Google《Attention Is All You Need》
+- 抛弃 RNN/CNN，完全基于注意力
+- 两大优势：长距离依赖 O(1) + 并行训练
+
+## 2. 输入部分
+### 2.1 Token 嵌入
+- `nn.Embedding(vocab, d_model)`
+### 2.2 位置编码
+- **为什么需要**：自注意力置换不变，无时序概念
+- **正弦/余弦编码**（原始）
+  - 公式：PE(pos,2i)=sin(pos/10000^(2i/d))，PE(pos,2i+1)=cos(...)
+  - 特点：确定、可外推、多频率
+- **其他方案**：可学习、相对位置、RoPE（大模型主流）、ALiBi
+### 2.3 输出嵌入
+- 目标语言词典，结构相同
+
+## 3. 注意力机制
+### 3.1 缩放点积注意力
+- 公式：`Attention(Q,K,V)=softmax(QK^T/√d_k)V`
+- 除以 √d_k：防 softmax 饱和、稳梯度
+### 3.2 多头注意力
+- 分头 → 并行计算 → 拼接 → 线性变换
+- 维度：(B,S,D) → (B,H,S,D/H) → (B,S,D)
+- 意义：多子空间、多模式依赖
+### 3.3 自注意力 vs 交叉注意力
+- 自：Q=K=V 同序列（编码器、解码器第一层）
+- 交叉：Q 来自解码器，K/V 来自编码器（解码器中间层）
+### 3.4 掩码 Mask
+- Padding Mask：忽略填充位
+- Look‑ahead Mask：因果掩码，自回归看不到未来
+
+## 4. 编码器 Encoder
+### 4.1 单层结构
+- 多头自注意力 → Add&Norm → FFN → Add&Norm
+### 4.2 残差连接
+- Post‑LN：`x + Sublayer(x)` 后 Norm（原始）
+- Pre‑LN：先 Norm 再 Sublayer 再加（现代，更稳定）
+### 4.3 层归一化 vs 批归一化
+- LayerNorm：对特征维归一化，适合变长序列
+- BatchNorm：对批维，序列任务不稳定
+### 4.4 前馈网络 FFN
+- `Linear -> ReLU/GELU -> Linear`
+- 先升维（4×d_model）再降维
+- 升级版：SwiGLU（LLaMA）
+### 4.5 堆叠 N 层
+- 原论文 N=6，逐层抽象语义
+
+## 5. 解码器 Decoder
+### 5.1 单层结构
+- 掩码自注意力 → Add&Norm
+- 交叉注意力 → Add&Norm
+- FFN → Add&Norm
+### 5.2 掩码自注意力
+- 因果掩码 + padding mask
+### 5.3 交叉注意力
+- Q：解码器上一步输出，K/V：编码器最终输出
+### 5.4 初始输入
+- `<SOS>` 开始符
+
+## 6. 输出与损失
+- 线性层：`(B,S,D) -> (B,S,vocab)`
+- Softmax + 交叉熵损失（忽略 padding）
+
+## 7. 完整模型流程
+### 训练模式
+- 源句 → 嵌入+位置 → 编码器 → memory
+- 目标句（右移）→ 嵌入+位置 → 解码器（使用 memory）
+- 输出 → softmax → 交叉熵
+### 推理模式（自回归）
+- 编码一次得 memory
+- 解码器从 `<SOS>` 开始，逐词生成，拼接到输入
+- 直到 `<EOS>` 或最大长度
+
+## 8. 训练细节与优化
+### 8.1 数据预处理
+- BPE 子词分词
+- 按长度排序 + padding
+- 构造 padding mask
+### 8.2 标签平滑
+- 目标分布：`(1-ε) one‑hot + ε/vocab`
+- 防过拟合，ε=0.1（原论文）
+### 8.3 学习率 Warmup
+- 先线性增，后平方根倒数衰减
+- 稳早期梯度
+### 8.4 参数初始化
+- 线性层：N(0, 1/√d_model)
+- 嵌入层：N(0,1)
+- 残差层乘系数 1/√(2N)
+
+## 9. 推理与加速
+### 9.1 贪心搜索
+- 每步取最大概率 token
+### 9.2 束搜索
+- 保留 top‑k 候选，长度归一化
+### 9.3 KV Cache
+- 缓存历史 K/V，新 token 只算自己的
+- 避免重复计算，大幅加速
+
+## 10. 变体与进化
+### 10.1 Decoder‑only（GPT）
+- 因果掩码，自回归 LM
+- 代表：GPT, LLaMA, Qwen, Mistral
+### 10.2 Encoder‑only（BERT）
+- 双向注意力，MLM 预训练
+- 代表：BERT, RoBERTa, ALBERT
+### 10.3 Encoder‑Decoder（T5）
+- 完整编解码，text‑to‑text
+- 代表：T5, BART, PEGASUS
+### 10.4 高效 Transformer
+- 稀疏注意：Longformer
+- 线性注意：Performer
+- 分块注意：Swin
+- FlashAttention：IO 感知分块，2‑4× 加速
+- MQA/GQA：多/分组查询注意力
+### 10.5 位置编码进阶
+- RoPE（旋转位置）：乘旋转矩阵，相对位置，可外推
+- ALiBi：减距离惩罚，无需学习
+### 10.6 视觉/多模态
+- ViT：图像分 patch 当 token
+- CLIP：双塔图文对比
+- 跨模态注意力
+
+## 11. 复杂度分析
+```
 
 ## 1 Transformer 诞生与核心思想
 
