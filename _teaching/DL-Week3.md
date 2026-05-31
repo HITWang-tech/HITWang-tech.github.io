@@ -79,9 +79,11 @@ def get_positional_encoding(seq_len, d_model):
 ### 3.1 缩放点积注意力（Scaled Dot-Product Attention）
 
 #### 3.1.1 公式
+
 $$
 \text{Attention}(Q, K, V) = \text{softmax}\left( \frac{QK^T}{\sqrt{d_k}} \right) V
 $$
+
 - $$Q$$ (Query) : 当前单词的查询向量，形状 `(seq_len_q, d_k)`
 - $$K$$ (Key)   : 所有单词的键向量，形状 `(seq_len_k, d_k)`
 - $$V$$ (Value) : 所有单词的值向量，形状 `(seq_len_v, d_v)`（通常 $$d_v = d_k$$）
@@ -105,12 +107,15 @@ $$
 
 #### 3.2.2 计算过程
 1. 对输入 $$X$$（shape: `[batch, seq_len, d_model]`）线性投影得到 $$Q, K, V$$：
+
    $$
    Q_i = X W_i^Q,\quad K_i = X W_i^K,\quad V_i = X W_i^V
    $$
+   
 2. 将 $$Q_i, K_i, V_i$$ 按头数切分（`d_model / h` 维度）。
 3. 每个头独立执行缩放点积注意力。
 4. 将所有头的输出拼接，再通过一个输出线性变换：
+   
    $$
    \text{MultiHead}(X) = \text{Concat}(\text{head}_1, \dots, \text{head}_h) W^O
    $$
@@ -159,11 +164,13 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 ### 4.3 层归一化（Layer Normalization）
 - 对每个样本的 **特征维度** 进行归一化（均值为 0，方差为 1），再学习缩放和平移参数。
 - 与 BatchNorm 对比：
+  
   |         | LayerNorm | BatchNorm |
   |---------|-----------|------------|
   | 归一化维度 | 特征维（C/H） | 批维（N） |
   | 适合序列 | ✅ 变长 | ❌ 依赖 batch 统计 |
   | 训练/测试一致 | ✅ | ❌ 需跟踪移动平均 |
+  
 - Transformer 中全部使用 LayerNorm。
 
 ### 4.4 前馈网络（FFN）
