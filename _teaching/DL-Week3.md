@@ -7,133 +7,6 @@ permalink: /teaching/DL-Week3
 <img src="https://raw.githubusercontent.com/HITWang-tech/HITWang-tech.github.io/refs/heads/master/images/exported_image.png">
 
 ## 1. 诞生与核心思想
-- 2017 Google《Attention Is All You Need》
-- 抛弃 RNN/CNN，完全基于注意力
-- 两大优势：长距离依赖 O(1) + 并行训练
-
-## 2. 输入部分
-### 2.1 Token 嵌入
-- `nn.Embedding(vocab, d_model)`
-### 2.2 位置编码
-- **为什么需要**：自注意力置换不变，无时序概念
-- **正弦/余弦编码**（原始）
-  - 公式：PE(pos,2i)=sin(pos/10000^(2i/d))，PE(pos,2i+1)=cos(...)
-  - 特点：确定、可外推、多频率
-- **其他方案**：可学习、相对位置、RoPE（大模型主流）、ALiBi
-### 2.3 输出嵌入
-- 目标语言词典，结构相同
-
-## 3. 注意力机制
-### 3.1 缩放点积注意力
-- 公式：`Attention(Q,K,V)=softmax(QK^T/√d_k)V`
-- 除以 √d_k：防 softmax 饱和、稳梯度
-### 3.2 多头注意力
-- 分头 → 并行计算 → 拼接 → 线性变换
-- 维度：(B,S,D) → (B,H,S,D/H) → (B,S,D)
-- 意义：多子空间、多模式依赖
-### 3.3 自注意力 vs 交叉注意力
-- 自：Q=K=V 同序列（编码器、解码器第一层）
-- 交叉：Q 来自解码器，K/V 来自编码器（解码器中间层）
-### 3.4 掩码 Mask
-- Padding Mask：忽略填充位
-- Look‑ahead Mask：因果掩码，自回归看不到未来
-
-## 4. 编码器 Encoder
-### 4.1 单层结构
-- 多头自注意力 → Add&Norm → FFN → Add&Norm
-### 4.2 残差连接
-- Post‑LN：`x + Sublayer(x)` 后 Norm（原始）
-- Pre‑LN：先 Norm 再 Sublayer 再加（现代，更稳定）
-### 4.3 层归一化 vs 批归一化
-- LayerNorm：对特征维归一化，适合变长序列
-- BatchNorm：对批维，序列任务不稳定
-### 4.4 前馈网络 FFN
-- `Linear -> ReLU/GELU -> Linear`
-- 先升维（4×d_model）再降维
-- 升级版：SwiGLU（LLaMA）
-### 4.5 堆叠 N 层
-- 原论文 N=6，逐层抽象语义
-
-## 5. 解码器 Decoder
-### 5.1 单层结构
-- 掩码自注意力 → Add&Norm
-- 交叉注意力 → Add&Norm
-- FFN → Add&Norm
-### 5.2 掩码自注意力
-- 因果掩码 + padding mask
-### 5.3 交叉注意力
-- Q：解码器上一步输出，K/V：编码器最终输出
-### 5.4 初始输入
-- `<SOS>` 开始符
-
-## 6. 输出与损失
-- 线性层：`(B,S,D) -> (B,S,vocab)`
-- Softmax + 交叉熵损失（忽略 padding）
-
-## 7. 完整模型流程
-### 训练模式
-- 源句 → 嵌入+位置 → 编码器 → memory
-- 目标句（右移）→ 嵌入+位置 → 解码器（使用 memory）
-- 输出 → softmax → 交叉熵
-### 推理模式（自回归）
-- 编码一次得 memory
-- 解码器从 `<SOS>` 开始，逐词生成，拼接到输入
-- 直到 `<EOS>` 或最大长度
-
-## 8. 训练细节与优化
-### 8.1 数据预处理
-- BPE 子词分词
-- 按长度排序 + padding
-- 构造 padding mask
-### 8.2 标签平滑
-- 目标分布：`(1-ε) one‑hot + ε/vocab`
-- 防过拟合，ε=0.1（原论文）
-### 8.3 学习率 Warmup
-- 先线性增，后平方根倒数衰减
-- 稳早期梯度
-### 8.4 参数初始化
-- 线性层：N(0, 1/√d_model)
-- 嵌入层：N(0,1)
-- 残差层乘系数 1/√(2N)
-
-## 9. 推理与加速
-### 9.1 贪心搜索
-- 每步取最大概率 token
-### 9.2 束搜索
-- 保留 top‑k 候选，长度归一化
-### 9.3 KV Cache
-- 缓存历史 K/V，新 token 只算自己的
-- 避免重复计算，大幅加速
-
-## 10. 变体与进化
-### 10.1 Decoder‑only（GPT）
-- 因果掩码，自回归 LM
-- 代表：GPT, LLaMA, Qwen, Mistral
-### 10.2 Encoder‑only（BERT）
-- 双向注意力，MLM 预训练
-- 代表：BERT, RoBERTa, ALBERT
-### 10.3 Encoder‑Decoder（T5）
-- 完整编解码，text‑to‑text
-- 代表：T5, BART, PEGASUS
-### 10.4 高效 Transformer
-- 稀疏注意：Longformer
-- 线性注意：Performer
-- 分块注意：Swin
-- FlashAttention：IO 感知分块，2‑4× 加速
-- MQA/GQA：多/分组查询注意力
-### 10.5 位置编码进阶
-- RoPE（旋转位置）：乘旋转矩阵，相对位置，可外推
-- ALiBi：减距离惩罚，无需学习
-### 10.6 视觉/多模态
-- ViT：图像分 patch 当 token
-- CLIP：双塔图文对比
-- 跨模态注意力
-
-## 11. 复杂度分析
-```
-
-## 1 Transformer 诞生与核心思想
-
 ### 1.1 背景
 - 之前序列模型以 RNN（LSTM, GRU）和 CNN（ConvS2S）为主。
 - RNN 的缺陷：难以并行、长距离依赖易梯度消失、训练慢。
@@ -151,78 +24,48 @@ permalink: /teaching/DL-Week3
 - 编码器：6 层堆叠，每层包含「多头自注意力 + FFN」。
 - 解码器：6 层堆叠，每层包含「掩码多头自注意力 + 交叉注意力 + FFN」。
 - 输入输出均加位置编码。
-
+  
 ---
 
-## 2 输入处理：词嵌入与位置编码
-
-### 2.1 Token 嵌入（Word Embedding）
-- 输入句子 `[x1, x2, ..., xn]`，每个 token 映射为 d_model 维向量。
-- 实现：`nn.Embedding(vocab_size, d_model)`，权重可学习。
-- 与 RNN 不同：这里无时间步概念，所有 token 同时输入。
-
-### 2.2 位置编码的必要性
-- 自注意力对 token 顺序不敏感（置换不变性）。
-- 若不加位置信息，模型会将 “我打你” 和 “你打我” 视为相同。
-- 需要显式注入位置信息。
-
-### 2.3 原始位置编码（三角函数）
-- 公式（pos 是位置，i 是维度索引）：
-  $$
-  \begin{aligned}
-  PE_{(pos, 2i)} &= \sin\left( \frac{pos}{10000^{2i/d_{\text{model}}}} \right) \\
-  PE_{(pos, 2i+1)} &= \cos\left( \frac{pos}{10000^{2i/d_{\text{model}}}} \right)
-  \end{aligned}
-  $$
-- 特点：
-  - 每个位置编码是唯一确定的，无需学习。
-  - 可以外推到更长序列（相对位置性质）。
-  - 不同维度的频率不同，低维度变化快（捕捉局部位置），高维度变化慢（捕捉全局位置）。
-
-### 2.4 其他位置编码方法
-- **可学习位置编码**：像词嵌入一样，直接学习一个 `[max_len, d_model]` 矩阵（BERT、ViT 使用）。简单但无法外推更长。
-- **相对位置编码**：建模位置差，例如 `(pos_i - pos_j)` 作为偏置（Transformer-XL, T5）。
-- **旋转位置编码 RoPE**（LLaMA, GPT-NeoX）：将位置旋转矩阵作用于 Query 和 Key，既保留相对关系又支持长序列外推，目前大模型主流。
-- **ALiBi**：直接给注意力分数加上与距离成比例的惩罚项，无需学习。
-
-### 2.5 代码示例（正弦位置编码）
-```python
-import torch
-import math
-
-def get_positional_encoding(seq_len, d_model):
-    pe = torch.zeros(seq_len, d_model)
-    position = torch.arange(0, seq_len).unsqueeze(1)  # (seq_len, 1)
-    div_term = torch.exp(torch.arange(0, d_model, 2) * -(math.log(10000.0) / d_model))
-    pe[:, 0::2] = torch.sin(position * div_term)
-    pe[:, 1::2] = torch.cos(position * div_term)
-    return pe  # (seq_len, d_model)
-```
-
+## 2. 输入部分
+### 2.1 Token 嵌入
+- `nn.Embedding(vocab, d_model)`
+  
+### 2.2 位置编码
+- **为什么需要**：自注意力置换不变，无时序概念
+- **正弦/余弦编码**（原始）
+  - 公式： $$PE(pos,2i)=sin(pos/10000^(2i/d))，PE(pos,2i+1)=cos(...)$$
+  - 特点：确定、可外推、多频率
+- **其他方案**：可学习、相对位置、RoPE（大模型主流）、ALiBi
+  
+### 2.3 输出嵌入
+- 目标语言词典，结构相同
+  
 ---
 
-## 3 注意力机制详解
+## 3. 注意力机制
+### 3.1 缩放点积注意力
 
-### 3.1 缩放点积注意力（Scaled Dot-Product Attention）
 
-#### 3.1.1 公式
+ #### 3.1.1 公式
 
 $$
 \text{Attention}(Q, K, V) = \text{softmax}\left( \frac{QK^T}{\sqrt{d_k}} \right) V
 $$
 
+- 除以 $$√d_k$$ ：防 softmax 饱和、稳梯度
 - $$Q$$ (Query) : 当前单词的查询向量，形状 `(seq_len_q, d_k)`
 - $$K$$ (Key)   : 所有单词的键向量，形状 `(seq_len_k, d_k)`
 - $$V$$ (Value) : 所有单词的值向量，形状 `(seq_len_v, d_v)`（通常 $$d_v = d_k$$）
 
 #### 3.1.2 计算步骤
-1. 计算 $$QK^T$$，得到注意力分数矩阵（每对位置的相似度）。
+1. 计算 $$QK^T$$ ，得到注意力分数矩阵（每对位置的相似度）。
 2. 除以 $$\sqrt{d_k}$$ 进行缩放。
 3. 可选：应用掩码（Padding Mask / Look-ahead Mask）。
 4. softmax 归一化，得到权重矩阵。
-5. 加权求和：权重矩阵 × $$V$$。
+5. 加权求和：权重矩阵 × $$V$$ 。
 
-#### 3.1.3 为什么要除以 $$\sqrt{d_k}$$？
+#### 3.1.3 为什么要除以 $$\sqrt{d_k}$$ ？
 - 当 $$d_k$$ 较大时，点积的绝对值容易变得很大，导致 softmax 进入饱和区（梯度极小）。
 - 除以 $$\sqrt{d_k}$$ 使点积的方差保持在 1，稳定梯度。
 
@@ -274,8 +117,55 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
     return torch.matmul(p_attn, V), p_attn
 ```
 
----
+### 3.2 多头注意力（Multi-Head Attention）
 
+#### 3.2.1 动机
+- 单头注意力只能学习一种相关性模式。
+- 多头可以从不同子空间、不同角度捕捉多种依赖关系（如语法、语义、长距离等）。
+
+#### 3.2.2 计算过程
+1. 对输入 $$X$$（shape: `[batch, seq_len, d_model]`）线性投影得到 $$Q, K, V$$：
+
+   $$
+   Q_i = X W_i^Q,\quad K_i = X W_i^K,\quad V_i = X W_i^V
+   $$
+   
+2. 将 $$Q_i, K_i, V_i$$ 按头数切分（`d_model / h` 维度）。
+3. 每个头独立执行缩放点积注意力。
+4. 将所有头的输出拼接，再通过一个输出线性变换：
+   
+   $$
+   \text{MultiHead}(X) = \text{Concat}(\text{head}_1, \dots, \text{head}_h) W^O
+   $$
+
+#### 3.2.3 维度变换
+- 输入：`(B, S, D)`，其中 $$D = d_{\text{model}}$$
+- 分头：`(B, S, H, D/H)` → 转置为 `(B, H, S, D/H)`
+- 每个头计算后：`(B, H, S, D/H)`
+- 拼接：`(B, S, D)`
+- 输出线性：`(B, S, D)`
+
+### 3.3 自注意力（Self-Attention）与交叉注意力（Cross-Attention）
+- **自注意力**：$$Q, K, V$$ 来自同一序列。编码器中使用，双向（能看到整个句子）。
+- **交叉注意力**：$$Q$$ 来自解码器上一层的输出，$$K, V$$ 来自编码器的输出。解码器中间层使用，让解码器关注输入序列的相关部分。
+
+### 3.4 掩码（Mask）
+- **Padding Mask**：对 batch 中填充的 `<PAD>` 位置，将其注意力分数置为 $$-\infty$$，使 softmax 后权重为 0。
+- **Look-ahead Mask（因果掩码）**：在解码器自注意力中，位置 $$i$$ 只能看到 $$j \le i$$ 的位置。上三角部分设为 $$-\infty$$。
+- **组合**：解码器自注意力同时使用 Padding Mask + Look-ahead Mask。
+
+### 3.5 代码示例（单头注意力）
+```python
+def scaled_dot_product_attention(Q, K, V, mask=None):
+    d_k = Q.size(-1)
+    scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)
+    if mask is not None:
+        scores = scores.masked_fill(mask == 0, -1e9)
+    p_attn = scores.softmax(dim=-1)
+    return torch.matmul(p_attn, V), p_attn
+```
+
+--- 
 ## 4 编码器 Encoder
 
 ### 4.1 编码器层结构
@@ -339,7 +229,6 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 - 解码器第一个输入是 `<SOS>` 标记（start of sentence），然后逐词预测。
 
 ---
-
 ## 6 输出层与损失函数
 
 ### 6.1 输出线性层 + Softmax
@@ -522,3 +411,12 @@ class Transformer(nn.Module):
         return self.fc_out(output)
 ```
 实际实现需要处理 mask 维度、残差、LayerNorm 顺序等细节。
+
+
+
+
+
+
+
+
+
