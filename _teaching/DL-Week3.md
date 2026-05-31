@@ -4,46 +4,8 @@ collection: teaching
 permalink: /teaching/DL-Week3
 ---
 
-## 目录
-1. [Transformer 诞生与核心思想](#1-transformer-诞生与核心思想)
-2. [输入处理：词嵌入与位置编码](#2-输入处理词嵌入与位置编码)
-3. [注意力机制详解](#3-注意力机制详解)
-   - 3.1 缩放点积注意力
-   - 3.2 多头注意力
-   - 3.3 自注意力与交叉注意力
-   - 3.4 掩码机制
-4. [编码器 Encoder](#4-编码器-encoder)
-   - 4.1 残差连接
-   - 4.2 层归一化（LayerNorm vs BatchNorm）
-   - 4.3 前馈网络 FFN
-   - 4.4 完整编码器层堆叠
-5. [解码器 Decoder](#5-解码器-decoder)
-   - 5.1 带掩码的自注意力
-   - 5.2 交叉注意力
-   - 5.3 解码器层堆叠
-6. [输出层与损失函数](#6-输出层与损失函数)
-7. [完整模型前向计算](#7-完整模型前向计算)
-8. [训练细节与优化技巧](#8-训练细节与优化技巧)
-   - 8.1 数据预处理与批处理
-   - 8.2 标签平滑
-   - 8.3 学习率 warmup
-   - 8.4 参数初始化
-9. [推理与解码策略](#9-推理与解码策略)
-   - 9.1 贪心搜索
-   - 9.2 束搜索（Beam Search）
-   - 9.3 KV Cache 加速
-10. [Transformer 变体与进化](#10-transformer-变体与进化)
-    - 10.1 Decoder-only（GPT, LLaMA）
-    - 10.2 Encoder-only（BERT, RoBERTa）
-    - 10.3 Encoder-Decoder（T5, BART）
-    - 10.4 高效 Transformer（Longformer, FlashAttention, RoPE 等）
-    - 10.5 视觉 Transformer（ViT, CLIP）
-11. [复杂度分析与长序列挑战](#11-复杂度分析与长序列挑战)
-12. [常见面试题与深入思考](#12-常见面试题与深入思考)
 
----
-
-## 1. Transformer 诞生与核心思想
+## 1 Transformer 诞生与核心思想
 
 ### 1.1 背景
 - 之前序列模型以 RNN（LSTM, GRU）和 CNN（ConvS2S）为主。
@@ -65,7 +27,7 @@ permalink: /teaching/DL-Week3
 
 ---
 
-## 2. 输入处理：词嵌入与位置编码
+## 2 输入处理：词嵌入与位置编码
 
 ### 2.1 Token 嵌入（Word Embedding）
 - 输入句子 `[x1, x2, ..., xn]`，每个 token 映射为 d_model 维向量。
@@ -79,12 +41,12 @@ permalink: /teaching/DL-Week3
 
 ### 2.3 原始位置编码（三角函数）
 - 公式（pos 是位置，i 是维度索引）：
-  \[
+  $$
   \begin{aligned}
   PE_{(pos, 2i)} &= \sin\left( \frac{pos}{10000^{2i/d_{\text{model}}}} \right) \\
   PE_{(pos, 2i+1)} &= \cos\left( \frac{pos}{10000^{2i/d_{\text{model}}}} \right)
   \end{aligned}
-  \]
+  $$
 - 特点：
   - 每个位置编码是唯一确定的，无需学习。
   - 可以外推到更长序列（相对位置性质）。
@@ -112,61 +74,61 @@ def get_positional_encoding(seq_len, d_model):
 
 ---
 
-## 3. 注意力机制详解
+## 3 注意力机制详解
 
 ### 3.1 缩放点积注意力（Scaled Dot-Product Attention）
 
-#### 公式
-\[
+#### 3.1.1 公式
+$$
 \text{Attention}(Q, K, V) = \text{softmax}\left( \frac{QK^T}{\sqrt{d_k}} \right) V
-\]
-- \(Q\) (Query) : 当前单词的查询向量，形状 `(seq_len_q, d_k)`
-- \(K\) (Key)   : 所有单词的键向量，形状 `(seq_len_k, d_k)`
-- \(V\) (Value) : 所有单词的值向量，形状 `(seq_len_v, d_v)`（通常 \(d_v = d_k\)）
+$$
+- $$Q$$ (Query) : 当前单词的查询向量，形状 `(seq_len_q, d_k)`
+- $$K$$ (Key)   : 所有单词的键向量，形状 `(seq_len_k, d_k)`
+- $$V$$ (Value) : 所有单词的值向量，形状 `(seq_len_v, d_v)`（通常 $$d_v = d_k$$）
 
-#### 计算步骤
-1. 计算 \(QK^T\)，得到注意力分数矩阵（每对位置的相似度）。
-2. 除以 \(\sqrt{d_k}\) 进行缩放。
+#### 3.1.2 计算步骤
+1. 计算 $$QK^T$$，得到注意力分数矩阵（每对位置的相似度）。
+2. 除以 $$\sqrt{d_k}$$ 进行缩放。
 3. 可选：应用掩码（Padding Mask / Look-ahead Mask）。
 4. softmax 归一化，得到权重矩阵。
-5. 加权求和：权重矩阵 × \(V\)。
+5. 加权求和：权重矩阵 × $$V$$。
 
-#### 为什么要除以 \(\sqrt{d_k}\)？
-- 当 \(d_k\) 较大时，点积的绝对值容易变得很大，导致 softmax 进入饱和区（梯度极小）。
-- 除以 \(\sqrt{d_k}\) 使点积的方差保持在 1，稳定梯度。
+#### 3.1.3 为什么要除以 $$\sqrt{d_k}$$？
+- 当 $$d_k$$ 较大时，点积的绝对值容易变得很大，导致 softmax 进入饱和区（梯度极小）。
+- 除以 $$\sqrt{d_k}$$ 使点积的方差保持在 1，稳定梯度。
 
 ### 3.2 多头注意力（Multi-Head Attention）
 
-#### 动机
+#### 3.2.1 动机
 - 单头注意力只能学习一种相关性模式。
 - 多头可以从不同子空间、不同角度捕捉多种依赖关系（如语法、语义、长距离等）。
 
-#### 计算过程
-1. 对输入 \(X\)（shape: `[batch, seq_len, d_model]`）线性投影得到 \(Q, K, V\)：
-   \[
+#### 3.2.2 计算过程
+1. 对输入 $$X$$（shape: `[batch, seq_len, d_model]`）线性投影得到 $$Q, K, V$$：
+   $$
    Q_i = X W_i^Q,\quad K_i = X W_i^K,\quad V_i = X W_i^V
-   \]
-2. 将 \(Q_i, K_i, V_i\) 按头数切分（`d_model / h` 维度）。
+   $$
+2. 将 $$Q_i, K_i, V_i$$ 按头数切分（`d_model / h` 维度）。
 3. 每个头独立执行缩放点积注意力。
 4. 将所有头的输出拼接，再通过一个输出线性变换：
-   \[
+   $$
    \text{MultiHead}(X) = \text{Concat}(\text{head}_1, \dots, \text{head}_h) W^O
-   \]
+   $$
 
-#### 维度变换
-- 输入：`(B, S, D)`，其中 \(D = d_{\text{model}}\)
+#### 3.2.3 维度变换
+- 输入：`(B, S, D)`，其中 $$D = d_{\text{model}}$$
 - 分头：`(B, S, H, D/H)` → 转置为 `(B, H, S, D/H)`
 - 每个头计算后：`(B, H, S, D/H)`
 - 拼接：`(B, S, D)`
 - 输出线性：`(B, S, D)`
 
 ### 3.3 自注意力（Self-Attention）与交叉注意力（Cross-Attention）
-- **自注意力**：\(Q, K, V\) 来自同一序列。编码器中使用，双向（能看到整个句子）。
-- **交叉注意力**：\(Q\) 来自解码器上一层的输出，\(K, V\) 来自编码器的输出。解码器中间层使用，让解码器关注输入序列的相关部分。
+- **自注意力**：$$Q, K, V$$ 来自同一序列。编码器中使用，双向（能看到整个句子）。
+- **交叉注意力**：$$Q$$ 来自解码器上一层的输出，$$K, V$$ 来自编码器的输出。解码器中间层使用，让解码器关注输入序列的相关部分。
 
 ### 3.4 掩码（Mask）
-- **Padding Mask**：对 batch 中填充的 `<PAD>` 位置，将其注意力分数置为 \(-\infty\)，使 softmax 后权重为 0。
-- **Look-ahead Mask（因果掩码）**：在解码器自注意力中，位置 \(i\) 只能看到 \(j \le i\) 的位置。上三角部分设为 \(-\infty\)。
+- **Padding Mask**：对 batch 中填充的 `<PAD>` 位置，将其注意力分数置为 $$-\infty$$，使 softmax 后权重为 0。
+- **Look-ahead Mask（因果掩码）**：在解码器自注意力中，位置 $$i$$ 只能看到 $$j \le i$$ 的位置。上三角部分设为 $$-\infty$$。
 - **组合**：解码器自注意力同时使用 Padding Mask + Look-ahead Mask。
 
 ### 3.5 代码示例（单头注意力）
@@ -182,7 +144,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 ---
 
-## 4. 编码器 Encoder
+## 4 编码器 Encoder
 
 ### 4.1 编码器层结构
 每个编码器层包含两个子层：
@@ -207,9 +169,9 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 ### 4.4 前馈网络（FFN）
 - 结构：两个线性层，中间有激活函数（ReLU 或 GELU）。
 - 公式：
-  \[
+  $$
   \text{FFN}(x) = \text{ReLU}(xW_1 + b_1) W_2 + b_2
-  \]
+  $$
 - 参数：通常 `d_ff = 4 * d_model`，即先升维再降维。
 - 作用：对每个位置做独立非线性变换，与注意力的全局混合互补。
 - 现代升级：使用 SwiGLU（LLaMA, PaLM），参数更多，效果更好。
@@ -220,7 +182,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 ---
 
-## 5. 解码器 Decoder
+## 5 解码器 Decoder
 
 ### 5.1 解码器层结构
 每个解码器层包含三个子层：
@@ -244,7 +206,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 ---
 
-## 6. 输出层与损失函数
+## 6 输出层与损失函数
 
 ### 6.1 输出线性层 + Softmax
 - 线性层：将解码器输出 `(batch, seq_len, d_model)` 映射到 `(batch, seq_len, vocab_size)`。
@@ -253,13 +215,13 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 ### 6.2 损失函数
 - 训练时：交叉熵损失，忽略 padding 位置的 loss。
 - 公式：
-  \[
+  $$
   \mathcal{L} = -\sum_{t=1}^{T} \log p(y_t | y_{<t}, x)
-  \]
+  $$
 
 ---
 
-## 7. 完整模型前向计算
+## 7 完整模型前向计算
 
 ### 7.1 训练模式（以机器翻译为例）
 1. 源句子 `src` → 词嵌入 + 位置编码 → 编码器输出 `memory`。
@@ -276,7 +238,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 ---
 
-## 8. 训练细节与优化技巧
+## 8 训练细节与优化技巧
 
 ### 8.1 数据预处理
 - **BPE（Byte Pair Encoding）**：子词分词，平衡词表大小与 OOV。
@@ -285,28 +247,28 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 ### 8.2 标签平滑（Label Smoothing）
 - 将 one‑hot 目标分布替换为：
-  \[
+  $$
   y' = (1 - \epsilon) y_{\text{one-hot}} + \epsilon / \text{vocab\_size}
-  \]
+  $$
 - 作用：防止模型过于自信，提升泛化能力。
-- 原始 Transformer 使用 \(\epsilon=0.1\)。
+- 原始 Transformer 使用 $$\epsilon=0.1$$。
 
 ### 8.3 学习率调度（Warmup）
 - 先线性增加到最大值，再按平方根倒数衰减。
 - 公式：
-  \[
+  $$
   \text{lr} = d_{\text{model}}^{-0.5} \cdot \min(\text{step}^{-0.5}, \text{step} \cdot \text{warmup\_steps}^{-1.5})
-  \]
+  $$
 - 原因：早期梯度不稳定，小 lr 防止 divergence；后期逐步衰减。
 
 ### 8.4 参数初始化
-- 所有线性层权重：均值为 0，方差为 \(1/\sqrt{d_{\text{model}}}\) 的正态分布。
+- 所有线性层权重：均值为 0，方差为 $$1/\sqrt{d_{\text{model}}}$$ 的正态分布。
 - 嵌入层：方差为 1。
-- 编码器/解码器最后的线性层额外乘系数 \(1/\sqrt{2N}\)（根据残差堆叠深度）。
+- 编码器/解码器最后的线性层额外乘系数 $$1/\sqrt{2N}$$（根据残差堆叠深度）。
 
 ---
 
-## 9. 推理与解码策略
+## 9 推理与解码策略
 
 ### 9.1 贪心搜索
 - 每一步选择概率最大的 token。
@@ -325,7 +287,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 ---
 
-## 10. Transformer 变体与进化
+## 10 Transformer 变体与进化
 
 ### 10.1 Decoder-only（生成式，GPT 系列）
 - 结构：仅解码器 + 因果掩码。
@@ -345,8 +307,8 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 - 优势：适合翻译、摘要、改写等需要输入到输出的任务。
 
 ### 10.4 高效 Transformer（长序列优化）
-- **稀疏注意力**：Longformer, BigBird，用滑动窗口 + 全局注意力降低 \(O(n^2)\)。
-- **线性注意力**：Performer, Linear Transformer，用核方法逼近 softmax，复杂度 \(O(n)\)。
+- **稀疏注意力**：Longformer, BigBird，用滑动窗口 + 全局注意力降低 $$O(n^2)$$。
+- **线性注意力**：Performer, Linear Transformer，用核方法逼近 softmax，复杂度 $$O(n)$$。
 - **分块局部注意力**：Swin Transformer（视觉），将图像划分为窗口。
 - **FlashAttention**：IO 感知的精确注意力，通过分块减少 GPU 内存读写，速度提升 2-4 倍。
 - **多查询注意力 MQA**：所有头共享同一个 K、V，减少 KV Cache 大小。
@@ -363,24 +325,24 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 ---
 
-## 11. 复杂度分析与长序列挑战
+## 11 复杂度分析与长序列挑战
 
 | 模型 | 每层时间复杂度 | 长序列瓶颈 |
 |------|--------------|------------|
-| RNN  | \(O(n \cdot d^2)\) | 串行计算，无法并行 |
-| CNN  | \(O(n \cdot k \cdot d^2)\) | 需要 \(O(n/k)\) 层才能看到全局 |
-| Transformer 注意力 | \(O(n^2 \cdot d)\) | 序列长度 n 增大时平方增长 |
+| RNN  | $$O(n \cdot d^2)$$ | 串行计算，无法并行 |
+| CNN  | $$O(n \cdot k \cdot d^2)$$ | 需要 $$O(n/k)$$ 层才能看到全局 |
+| Transformer 注意力 | $$O(n^2 \cdot d)$$ | 序列长度 n 增大时平方增长 |
 
 - 当 n=1000 时，注意力矩阵 1M 元素；n=100k 时 10B 元素，不可行。
 - 解决方案：稀疏注意力、线性注意力、混合架构（如 Mamba）。
 
 ---
 
-## 12. 常见面试题与深入思考
+## 12 常见问题与深入思考
 
 1. **为什么 Transformer 需要位置编码？**
    - 自注意力是置换不变的，没有时序信息。
-2. **为什么缩放点积要除以 \(\sqrt{d_k}\)？**
+1. **为什么缩放点积要除以 $$\sqrt{d_k}$$？**
    - 防止点积过大导致 softmax 饱和，梯度消失。
 3. **多头注意力为什么有效？**
    - 每个头关注不同的特征子空间，捕捉多种依赖类型。
@@ -401,7 +363,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
 ---
 
-## 附录：从零实现最小化 Transformer 的伪代码
+## 13 从零实现最小化 Transformer 的伪代码
 
 ```python
 class Transformer(nn.Module):
@@ -425,7 +387,4 @@ class Transformer(nn.Module):
             output = layer(output, memory, tgt_mask, None, tgt_padding_mask, memory_key_padding_mask)
         return self.fc_out(output)
 ```
-
-（注：实际实现需要处理 mask 维度、残差、LayerNorm 顺序等细节。）
-
-
+实际实现需要处理 mask 维度、残差、LayerNorm 顺序等细节。
