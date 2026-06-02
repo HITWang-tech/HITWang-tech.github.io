@@ -46,14 +46,13 @@ permalink: /teaching/DL-Week3
 ## 3. 注意力机制
 ### 3.1 缩放点积注意力
 
-
- #### 3.1.1 公式
+#### 3.1.1 公式
 
 $$
 \text{Attention}(Q, K, V) = \text{softmax}\left( \frac{QK^T}{\sqrt{d_k}} \right) V
 $$
 
-- 除以 $$√d_k$$ ：防 softmax 饱和、稳梯度
+- 除以 $$\sqrt{d_k}$$ ：防 softmax 饱和、稳梯度
 - $$Q$$ (Query) : 当前单词的查询向量，形状 `(seq_len_q, d_k)`
 - $$K$$ (Key)   : 所有单词的键向量，形状 `(seq_len_k, d_k)`
 - $$V$$ (Value) : 所有单词的值向量，形状 `(seq_len_v, d_v)`（通常 $$d_v = d_k$$）
