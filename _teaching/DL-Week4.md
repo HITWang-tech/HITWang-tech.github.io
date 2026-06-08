@@ -4,7 +4,7 @@ collection: teaching
 permalink: /teaching/DL-Week4
 ---
 
-<img src="https://raw.githubusercontent.com/HITWang-tech/HITWang-tech.github.io/refs/heads/master/images/exported_image(1).png">
+<img src="https://github.com/HITWang-tech/HITWang-tech.github.io/blob/master/images/exported_image_1.png">
 
 ## 1 大模型技术概述
 
@@ -31,7 +31,6 @@ permalink: /teaching/DL-Week4
 - 推动AI从“单任务专用”走向“通用能力底座”。
 - 催生**AI Agent**、**多模态大模型**、**具身智能**等新方向。
 - 带来计算成本、数据版权、可解释性、安全性等新挑战。
-以下是扩展后的完整笔记，在原有六节基础上增加了 **代码示例**、**损失函数推导** 与 **训练超参数表**。新增内容以 📌 标记，方便查阅。
 
 ## 2 多模态大模型技术
 
@@ -67,7 +66,6 @@ permalink: /teaching/DL-Week4
 ---
 
 ## 3 视觉Transformer（ViT）
-
 ### 3.1 从CNN到ViT
 - **CNN局限**：局部感受野，难以建模全局依赖；需要多层堆叠才能扩大视野。
 - **ViT核心思想**：将图像视为**序列**（patch序列），直接使用Transformer处理，天然具备全局感受野。
@@ -79,6 +77,7 @@ permalink: /teaching/DL-Week4
 - **类别令牌（可选）**：额外加一个可学习的[CLS] token，用于分类任务。
 - **Transformer编码器**：L层Multi-Head Self-Attention + FFN + LayerNorm + 残差连接。
 - **分类头**：取[CLS] token的输出或全局平均池化，接MLP分类。
+  
 ### 3.3 代码示例：ViT 完整前向实现（PyTorch）
 
 ```python
@@ -119,10 +118,15 @@ class ViT(nn.Module):
 
 ### 3.4 损失函数推导：ViT 分类任务
 使用标准交叉熵损失：
+
 $$
 \mathcal{L} = -\sum_{c=1}^{C} y_c \log \hat{y}_c
 $$
-其中 \$$hat{y} = \text{softmax}$$text{head}(z_{\text{cls}}))$$。
+
+其中
+
+$$\hat{y} = \text{softmax}(\text{head}(z_{\text{cls}}))$$
+
 
 ### 3.5 训练超参数表（ViT‑Base/16 在 ImageNet‑1K）
 
@@ -187,20 +191,26 @@ loss = contrastive_loss(image_emb, text_emb, temperature=0.07)
 ```
 
 ### 4.4 损失函数推导：对称对比损失（InfoNCE）
-对于包含 $$N$$ 个图文对的 batch，定义相似度矩阵 $$S_{i,j} = \frac{f(I_i) \cdot g(T_j)}{\tau}$$，其中 \$$tau$$ 是温度参数。
+对于包含 $$N$$ 个图文对的 batch，定义相似度矩阵 $$S_{i,j} = \frac{f(I_i) \cdot g(T_j)}{\tau}$$，其中 $$tau$$ 是温度参数。
 
 - 图像到文本的损失：
+  
 $$
 \mathcal{L}_{i2t} = -\frac{1}{N}\sum_{i=1}^{N} \log \frac{\exp(S_{i,i})}{\sum_{j=1}^{N}\exp(S_{i,j})}
 $$
+
 - 文本到图像的损失：
+  
 $$
 \mathcal{L}_{t2i} = -\frac{1}{N}\sum_{j=1}^{N} \log \frac{\exp(S_{j,j})}{\sum_{i=1}^{N}\exp(S_{i,j})}
 $$
-总损失：
+
+- 总损失：
+
 $$
-\mathcal{L} = \frac{1}{2}$$mathcal{L}_{i2t} + \mathcal{L}_{t2i})
+\mathcal{L} = \frac{1}{2}(\mathcal{L}_{i2t} + \mathcal{L}_{t2i})
 $$
+
 等价于最大化正样本对的相似度，同时最小化负样本对的相似度。
 
 ### 4.5 训练超参数表（CLIP 原始 ViT‑B/32）
@@ -223,9 +233,11 @@ $$
   - 给定一个batch内N个图文对，构造N个正样本对（匹配的图文），N² - N个负样本对（不匹配）。
   - 计算相似度矩阵（如余弦相似度），对图像到文本方向和文本到图像方向都做softmax交叉熵损失。
   - 对称对比损失（InfoNCE形式）：
-    $$
-    \mathcal{L} = \frac{1}{2}$$mathcal{L}_{\text{img2txt}} + \mathcal{L}_{\text{txt2img}})
-    $$
+    
+$$
+\mathcal{L} = \frac{1}{2}(\mathcal{L}_{\text{img2txt}} + \mathcal{L}_{\text{txt2img}})
+$$
+    
 - **批量大小**：使用极大batch（32768）以提供丰富负样本。
 
 ### 4.7 零样本推理流程
@@ -260,9 +272,11 @@ $$
 - **定义**：将大型教师模型的知识迁移到小型学生模型，实现压缩加速。
 - **软标签**：教师模型输出的类别概率分布（含暗知识，如“猫”与“豹”的相似度）。
 - **经典公式**：
-  $$
-  \mathcal{L} = \alpha \cdot \mathcal{L}_{\text{hard}}(y, p_s) + (1-\alpha) \cdot \mathcal{L}_{\text{soft}}(q_t, q_s)
-  $$
+
+$$
+\mathcal{L} = \alpha \cdot \mathcal{L}_{\text{hard}}(y, p_s) + (1-\alpha) \cdot \mathcal{L}_{\text{soft}}(q_t, q_s)
+$$
+  
   其中 $$q_t, q_s$$ 是经过温度$$T$$平滑后的教师/学生输出分布。
 
 #### 5.1.2 代码示例：知识蒸馏损失
@@ -280,9 +294,11 @@ def distillation_loss(student_logits, teacher_logits, labels, temperature=3.0, a
 
 #### 5.1.3 损失函数推导：知识蒸馏
 教师输出概率 $$q_i = \frac{\exp(z_i^t/T)}{\sum_j \exp(z_j^t/T)}$$，学生输出 $$p_i$$ 类似。蒸馏损失使用 KL 散度：
+
 $$
 \mathcal{L}_{\text{KD}} = T^2 \cdot \text{KL}(q \parallel p) = T^2 \sum_i q_i \log\frac{q_i}{p_i}
 $$
+
 乘以 $$T^2$$ 是为了使梯度幅度与温度参数无关。
 
 ### 5.2 训练超参数表（DINO ViT‑B/16）
@@ -311,6 +327,7 @@ $$
 #### 5.3.1 总体定位
 - **DINO**：一种自监督视觉Transformer训练方法，无标签仅需图像，通过知识蒸馏实现。
 - **特点**：无需负样本，无需聚类，直接学习有意义的视觉特征。
+  
 #### 5.3.2 代码示例：DINO 核心模块（EMA更新 + 多裁剪损失）
 
 ```python
@@ -342,11 +359,13 @@ def update_ema(teacher, student, momentum=0.996):
 ```
 
 #### 5.3.3 损失函数推导：DINO 自蒸馏损失
-设有全局视图 $$x_g$$ 和局部视图 $$x_l$$，学生网络 $$f_s$$ 和教师网络 $$f_t$$（教师EMA更新）。教师输出概率分布 $$P_t(x_g) = \text{softmax}(f_t(x_g)/\tau_t)$$，学生输出 $$P_s(x_l) = \text{softmax}(f_s(x_l)/\tau_s)$$。训练目标为最小化交叉熵：
+设有全局视图 $$x_g$$ 和局部视图 $$x_l$$ ，学生网络 $$f_s$$ 和教师网络 $$f_t$$（教师EMA更新）。教师输出概率分布 $$P_t(x_g) = \text{softmax}(f_t(x_g)/\tau_t)$$ ，学生输出 $$P_s(x_l) = \text{softmax}(f_s(x_l)/\tau_s)$$ 。训练目标为最小化交叉熵：
+
 $$
 \mathcal{L} = - \sum_{k} P_t(x_g)_k \log P_s(x_l)_k
 $$
-为避免崩溃，教师输出进行中心化$$(P_t = \text{softmax}((f_t - c)/\tau_t)$$）并维持较高的温度 \$$tau_t$$，学生温度 \$$tau_s$$ 较低。
+
+为避免崩溃，教师输出进行中心化 $$(P_t = \text{softmax}((f_t - c)/\tau_t))$$ 并维持较高的温度 $$\tau_t$$ ，学生温度 $$\tau_s$$ 较低。
 
 #### 5.3.4 核心思想——自蒸馏
 - **学生-教师对称架构**：两个相同网络（学生和教师），教师参数由学生通过**指数移动平均（EMA）** 更新。
@@ -356,16 +375,19 @@ $$
   - 目标：学生从局部视图预测教师的全局视图表示。
 
 #### 5.3.5 训练目标
-- 教师输出概率分布 $$P_t$$（经过centering和sharpening），学生输出 $$P_s$$。
-- 最小化交叉熵：\$$mathcal{L} = -P_t \log P_s$$。
+- 教师输出概率分布 $$P_t$$（经过centering和sharpening），学生输出 $$P_s$$ 。
+- 最小化交叉熵：
+
+$$\mathcal{L} = -P_t \log P_s$$
+
 - **避免崩溃**：
   - 教师使用EMA + 中心化（centering）抑制特征坍缩。
   - 学生输出经过softmax，无明确正则项。
 
 #### 5.3.6 关键组件
-- **EMA更新**：教师参数 \$$theta_t \leftarrow m \theta_t + (1-m) \theta_s$$，m接近1（如0.996~0.999）。
+- **EMA更新**：教师参数 $$\theta_t \leftarrow m \theta_t + (1-m) \theta_s$$ ，m接近1（如0.996~0.999）。
 - **中心化**：教师输出减去一个可学习的中心向量，防止某个维度占主导。
-- **锐化**：教师输出除以前一温度系数$$T$$（<1），使分布更尖。
+- **锐化**：教师输出除以前一温度系数 $$T$$（<1），使分布更尖。
 
 #### 5.3.7 重要结论（DINO论文发现）
 - **ViT自监督显著优于有监督**：在无标签数据上训练ViT，特征质量甚至超过有监督训练。
