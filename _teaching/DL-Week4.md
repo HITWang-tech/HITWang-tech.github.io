@@ -1,3 +1,9 @@
+---
+title: "第4周：大模型基础"
+collection: teaching
+permalink: /teaching/DL-Week4
+---
+
 ## 1 大模型技术概述
 
 ### 1.1 大模型的定义与特点
