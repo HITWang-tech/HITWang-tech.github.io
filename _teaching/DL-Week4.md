@@ -4,6 +4,8 @@ collection: teaching
 permalink: /teaching/DL-Week4
 ---
 
+<img src="https://raw.githubusercontent.com/HITWang-tech/HITWang-tech.github.io/refs/heads/master/images/exported_image(1).png">
+
 ## 1 大模型技术概述
 
 ### 1.1 大模型的定义与特点
@@ -78,6 +80,7 @@ permalink: /teaching/DL-Week4
 - **Transformer编码器**：L层Multi-Head Self-Attention + FFN + LayerNorm + 残差连接。
 - **分类头**：取[CLS] token的输出或全局平均池化，接MLP分类。
 ### 3.3 代码示例：ViT 完整前向实现（PyTorch）
+
 ```python
 class PatchEmbed(nn.Module):
     def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768):
@@ -165,6 +168,7 @@ $$
 - **投影头**：两个编码器后各接一个可学习的线性投影层，将特征映射到多模态嵌入空间。
   
 ### 4.3 代码示例：CLIP 对比损失实现
+
 ```python
 def contrastive_loss(image_features, text_features, temperature=0.07):
     # image_features, text_features: (batch_size, feature_dim) 已L2归一化
@@ -262,6 +266,7 @@ $$
   其中 $$q_t, q_s$$ 是经过温度$$T$$平滑后的教师/学生输出分布。
 
 #### 5.1.2 代码示例：知识蒸馏损失
+
 ```python
 def distillation_loss(student_logits, teacher_logits, labels, temperature=3.0, alpha=0.5):
     # 软标签损失（KL散度）
@@ -307,6 +312,7 @@ $$
 - **DINO**：一种自监督视觉Transformer训练方法，无标签仅需图像，通过知识蒸馏实现。
 - **特点**：无需负样本，无需聚类，直接学习有意义的视觉特征。
 #### 5.3.2 代码示例：DINO 核心模块（EMA更新 + 多裁剪损失）
+
 ```python
 class DINOLoss(nn.Module):
     def __init__(self, out_dim, teacher_temp=0.04, student_temp=0.1, center_momentum=0.9):
@@ -382,6 +388,7 @@ $$
 ## 6 总结
 
 ### 6.1 知识点回顾
+
 | 章节               | 核心内容                                                                 |
 | ------------------ | ------------------------------------------------------------------------ |
 | 大模型技术概述     | 定义、Scaling Law、预训练-微调范式、分布式训练、RLHF                     |
