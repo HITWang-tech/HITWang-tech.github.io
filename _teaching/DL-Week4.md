@@ -4,7 +4,7 @@ collection: teaching
 permalink: /teaching/DL-Week4
 ---
 
-<img src="https://github.com/HITWang-tech/HITWang-tech.github.io/blob/master/images/exported_image_1.png">
+<img src="https://raw.githubusercontent.com/HITWang-tech/HITWang-tech.github.io/refs/heads/master/images/exported_image_1.png">
 
 ## 1 大模型技术概述
 
