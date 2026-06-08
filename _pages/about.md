@@ -10,6 +10,8 @@ redirect_from:
 - [第1周](https://hitwang-tech.github.io/teaching/DL-Week1)
 - [第2周](https://hitwang-tech.github.io/teaching/DL-Week2)
 - [第3周](https://hitwang-tech.github.io/teaching/DL-Week3)
+- [第4周](https://hitwang-tech.github.io/teaching/DL-Week4)
+    
 ---
 
 ## 深度强化学习与控制2026春
